@@ -150,10 +150,7 @@ class _ScreenFourState extends State<ScreenFour> {
   }
 
   void _speak(String text) async {
-    // final targetLang = translator.targetLanguage;
-
     String ttsLang = "en";
-
     await flutterTts.setLanguage(ttsLang);
     await flutterTts.speak(text);
   }
@@ -202,7 +199,7 @@ class _ScreenFourState extends State<ScreenFour> {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadiusGeometry.vertical(
+                borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(30),
                 ),
                 boxShadow: [
@@ -247,6 +244,35 @@ class _ScreenFourState extends State<ScreenFour> {
                         ),
                         child: const Text(
                           "CONTINUE",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (!isCorrect)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          setState(() {
+                            selectedOptionEn = '';
+                            isCorrect = false;
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: greenPrimary,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          "TRY AGAIN",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

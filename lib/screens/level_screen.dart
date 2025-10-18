@@ -81,37 +81,43 @@ class _LevelScreenState extends State<LevelScreen> {
   Future<void> _checkAndUpdateStreak() async {
     final userId = FirebaseAuth.instance.currentUser!.uid;
     final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
-
     final userSnapshot = await userRef.get();
     if (!userSnapshot.exists) return;
 
     final userData = userSnapshot.data()!;
     int currentStreak = userData['streak'] ?? 0;
-    String? lastActiveStr = userData['lastActive']?.toDate().toIso8601String();
+    Timestamp? lastActiveTs = userData['lastActive'];
+    DateTime now = DateTime.now();
+    DateTime today = DateTime(now.year, now.month, now.day);
 
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+    if (lastActiveTs != null) {
+      DateTime lastDate = lastActiveTs.toDate();
+      DateTime lastDay = DateTime(lastDate.year, lastDate.month, lastDate.day);
+      int difference = today.difference(lastDay).inDays;
 
-    if (lastActiveStr != null) {
-      final lastDate = DateTime.parse(lastActiveStr);
-      final lastDay = DateTime(lastDate.year, lastDate.month, lastDate.day);
-
-      final difference = today.difference(lastDay).inDays;
+      print("Today: $today");
+      print("Last active: $lastDay");
+      print("Difference: $difference");
 
       if (difference == 0) {
+        // 👉 Hôm nay đã tính streak rồi => KHÔNG cập nhật gì nữa
         return;
       } else if (difference == 1) {
-        currentStreak += 1;
+        // Liên tục => tăng streak
+        return;
       } else if (difference > 1) {
+        // Bỏ lỡ ngày => reset streak
         currentStreak = 1;
       }
     } else {
+      // Lần đầu => streak = 1
       currentStreak = 1;
     }
 
+    // 👉 Chỉ update Firestore khi có thay đổi thực sự
     await userRef.update({
       'streak': currentStreak,
-      'lastActive': FieldValue.serverTimestamp(),
+      'lastActive': Timestamp.fromDate(today),
     });
   }
 

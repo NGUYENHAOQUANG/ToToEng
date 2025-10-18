@@ -225,6 +225,34 @@ class _ScreenOneState extends State<ScreenOne> {
                         ),
                       ),
                     ),
+                  if (!isCorrect)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          setState(() {
+                            selectedOption = '';
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: greenPrimary,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          "TRY AGAIN",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             );

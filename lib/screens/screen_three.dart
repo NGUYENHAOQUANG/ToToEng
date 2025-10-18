@@ -259,6 +259,42 @@ class _ScreenThreeState extends State<ScreenThree> {
                         ),
                       ),
                     ),
+                  if (!isCorrect)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          setState(() {
+                            slectedWords.clear();
+                            shufflewords = [];
+                            for (var i = 0; i < answerEn.length; i++) {
+                              shufflewords.add({
+                                "en": answerEn[i],
+                                "translated": answerTranslated[i],
+                              });
+                            }
+                            shufflewords.shuffle();
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:  greenPrimary,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          "TRY AGAIN",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             );
