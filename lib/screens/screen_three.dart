@@ -25,6 +25,7 @@ class _ScreenThreeState extends State<ScreenThree> {
   String subtitle = "";
   String questionEn = "";
   String subtitleTranslated = "";
+  String questionTranslated = "";
   List<String> answerEn = [];
   List<String> answerTranslated = [];
   List<Map<String, String>> shufflewords = [];
@@ -70,6 +71,8 @@ class _ScreenThreeState extends State<ScreenThree> {
         return TranslateLanguage.korean;
       case "italian":
         return TranslateLanguage.italian;
+      case "vietnamese":
+        return TranslateLanguage.vietnamese;
       default:
         return TranslateLanguage.german;
     }
@@ -94,6 +97,8 @@ class _ScreenThreeState extends State<ScreenThree> {
         return "ko";
       case TranslateLanguage.italian:
         return "it";
+      case TranslateLanguage.vietnamese:
+        return "vi";
       default:
         return "de";
     }
@@ -122,6 +127,7 @@ class _ScreenThreeState extends State<ScreenThree> {
         answerEn = List<String>.from(doc["answer"] ?? []);
 
         subtitleTranslated = await translator.translateText(subtitle);
+        questionTranslated = await translator.translateText(questionEn);
         answerTranslated = [];
         for (final word in answerEn) {
           final translated = await translator.translateText(word);
@@ -143,9 +149,12 @@ class _ScreenThreeState extends State<ScreenThree> {
   }
 
   void _speak(String text) async {
-    if (text.isNotEmpty) {
-      await flutterTts.speak(text);
-    }
+    // final targetLang = translator.targetLanguage;
+
+    String ttsLang = "en";
+
+    await flutterTts.setLanguage(ttsLang);
+    await flutterTts.speak(text);
   }
 
   void _selectWord(Map<String, String> word) {
@@ -325,7 +334,7 @@ class _ScreenThreeState extends State<ScreenThree> {
                         vertical: 10,
                       ),
                       child: Text(
-                        questionEn,
+                        questionTranslated,
                         style: const TextStyle(
                           fontSize: 18,
                           color: Colors.black54,
@@ -360,7 +369,7 @@ class _ScreenThreeState extends State<ScreenThree> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
-                                      " ${word["en"]} [${word["translated"]}]",
+                                      " ${word["en"]} ",
                                       style: const TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w600,
@@ -430,7 +439,7 @@ class _ScreenThreeState extends State<ScreenThree> {
                                       GestureDetector(
                                         onTap: () => _selectWord(word),
                                         child: Text(
-                                          "${word["translated"]} [${word["en"]}]",
+                                          "${word["en"]}",
                                           style: const TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.w600,
@@ -440,8 +449,7 @@ class _ScreenThreeState extends State<ScreenThree> {
                                       ),
                                       const SizedBox(width: 8),
                                       GestureDetector(
-                                        onTap: () =>
-                                            _speak(word["translated"]!),
+                                        onTap: () => _speak(word["en"]!),
                                         child: const Icon(
                                           Icons.volume_up,
                                           color: greenPrimary,

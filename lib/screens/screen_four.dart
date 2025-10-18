@@ -27,6 +27,7 @@ class _ScreenFourState extends State<ScreenFour> {
   String questionTranslated = "";
   String answerEn = "";
   String answerTranslated = "";
+  String questionAudio = "";
   List<Map<String, dynamic>> options = [];
 
   String selectedOptionEn = "";
@@ -72,6 +73,8 @@ class _ScreenFourState extends State<ScreenFour> {
         return TranslateLanguage.korean;
       case "italian":
         return TranslateLanguage.italian;
+      case "vietnamese":
+        return TranslateLanguage.vietnamese;
       default:
         return TranslateLanguage.german;
     }
@@ -96,6 +99,8 @@ class _ScreenFourState extends State<ScreenFour> {
         return "ko";
       case TranslateLanguage.italian:
         return "it";
+      case TranslateLanguage.vietnamese:
+        return "vi";
       default:
         return "de";
     }
@@ -122,12 +127,12 @@ class _ScreenFourState extends State<ScreenFour> {
         subtitle = await translator.translateText(subtitle);
         questionEn = doc["question"] ?? "";
         answerEn = doc["answer"] ?? "";
-
+        questionAudio = questionEn.replaceAll("__", answerEn);
         final translatedQ = await translator.translateText(
-          questionEn.replaceAll("___", answerEn),
+          questionEn.replaceAll("__", answerEn),
         );
 
-        questionTranslated = translatedQ.replaceAll(answerEn, "___");
+        questionTranslated = translatedQ.replaceAll(answerEn, "__");
         answerTranslated = await translator.translateText(answerEn);
         final originalOptions = List<Map<String, dynamic>>.from(
           doc["options"] ?? [],
@@ -145,9 +150,12 @@ class _ScreenFourState extends State<ScreenFour> {
   }
 
   void _speak(String text) async {
-    if (text.isNotEmpty) {
-      await flutterTts.speak(text);
-    }
+    // final targetLang = translator.targetLanguage;
+
+    String ttsLang = "en";
+
+    await flutterTts.setLanguage(ttsLang);
+    await flutterTts.speak(text);
   }
 
   void _handleSelection(String textEn) {
@@ -322,7 +330,7 @@ class _ScreenFourState extends State<ScreenFour> {
                       child: Row(
                         children: [
                           IconButton(
-                            onPressed: () => _speak(questionTranslated),
+                            onPressed: () => _speak(questionAudio),
                             icon: const Icon(
                               Icons.volume_up,
                               color: greenPrimary,
@@ -345,7 +353,7 @@ class _ScreenFourState extends State<ScreenFour> {
                                 ),
                               ),
                               child: Text(
-                                "$questionTranslated\n[$questionEn]",
+                                "$questionEn\n[$questionTranslated]",
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
@@ -391,7 +399,7 @@ class _ScreenFourState extends State<ScreenFour> {
                                     ),
                                   ),
                                   child: Text(
-                                    "${option["textTranslated"]} [${option["textEn"]}]",
+                                    "${option["textEn"]}",
                                     style: TextStyle(
                                       color: isSelected
                                           ? Colors.white

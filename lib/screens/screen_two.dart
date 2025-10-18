@@ -70,6 +70,8 @@ class _ScreenTwoState extends State<ScreenTwo> {
         return TranslateLanguage.korean;
       case "italian":
         return TranslateLanguage.italian;
+      case "vietnamese":
+        return TranslateLanguage.vietnamese;
       default:
         return TranslateLanguage.german;
     }
@@ -94,6 +96,8 @@ class _ScreenTwoState extends State<ScreenTwo> {
         return "ko";
       case TranslateLanguage.italian:
         return "it";
+      case TranslateLanguage.vietnamese:
+        return "vi";
       default:
         return "de";
     }
@@ -143,9 +147,12 @@ class _ScreenTwoState extends State<ScreenTwo> {
   }
 
   void _speak(String text) async {
-    if (text.isNotEmpty) {
-      await flutterTts.speak(text);
-    }
+    // final targetLang = translator.targetLanguage;
+
+    String ttsLang = "en";
+
+    await flutterTts.setLanguage(ttsLang);
+    await flutterTts.speak(text);
   }
 
   void _handleSelection(String textTranslated) {

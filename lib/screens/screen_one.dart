@@ -68,6 +68,8 @@ class _ScreenOneState extends State<ScreenOne> {
         return TranslateLanguage.korean;
       case "italian":
         return TranslateLanguage.italian;
+      case "vietnamese":
+        return TranslateLanguage.vietnamese;
       default:
         return TranslateLanguage.german;
     }
@@ -120,28 +122,9 @@ class _ScreenOneState extends State<ScreenOne> {
   }
 
   void _speak(String text) async {
-    final targetLang = translator.targetLanguage;
+    // final targetLang = translator.targetLanguage;
 
-    String ttsLang = "de";
-    switch (targetLang) {
-      case TranslateLanguage.spanish:
-        ttsLang = "es";
-        break;
-      case TranslateLanguage.french:
-        ttsLang = "fr";
-        break;
-      case TranslateLanguage.german:
-        ttsLang = "de";
-        break;
-      case TranslateLanguage.korean:
-        ttsLang = "ko";
-        break;
-      case TranslateLanguage.italian:
-        ttsLang = "it";
-        break;
-      default:
-        ttsLang = "de";
-    }
+    String ttsLang = "en";
 
     await flutterTts.setLanguage(ttsLang);
     await flutterTts.speak(text);

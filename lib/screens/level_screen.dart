@@ -31,6 +31,7 @@ class _LevelScreenState extends State<LevelScreen> {
     "French",
     "Italian",
     "Korean",
+    "Vietnamese",
   ];
 
   Future<void> _changeLanguage() async {
@@ -86,36 +87,31 @@ class _LevelScreenState extends State<LevelScreen> {
 
     final userData = userSnapshot.data()!;
     int currentStreak = userData['streak'] ?? 0;
-    String? lastActiveDateStr = userData['lastActiveDate'];
+    String? lastActiveStr = userData['lastActive']?.toDate().toIso8601String();
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    if (lastActiveDateStr != null) {
-      final lastDate = DateTime.parse(lastActiveDateStr);
+    if (lastActiveStr != null) {
+      final lastDate = DateTime.parse(lastActiveStr);
       final lastDay = DateTime(lastDate.year, lastDate.month, lastDate.day);
 
       final difference = today.difference(lastDay).inDays;
 
       if (difference == 0) {
-        // đã vào hôm nay rồi → không làm gì
         return;
       } else if (difference == 1) {
-        // giữ streak liên tục → +1
         currentStreak += 1;
       } else if (difference > 1) {
-        // bị ngắt → reset về 1
         currentStreak = 1;
       }
     } else {
-      // lần đầu tiên vào → bắt đầu streak = 1
       currentStreak = 1;
     }
 
-    // cập nhật Firestore
     await userRef.update({
       'streak': currentStreak,
-      'lastActiveDate': today.toIso8601String(),
+      'lastActive': FieldValue.serverTimestamp(),
     });
   }
 
