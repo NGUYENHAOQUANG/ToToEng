@@ -6,6 +6,7 @@ import 'package:totoeng/screens/leaderborad_screen.dart';
 import 'package:totoeng/screens/profile_screen.dart';
 import 'package:totoeng/screens/screen_one.dart';
 import '../auth/signin_screen.dart';
+import 'package:totoeng/services/notification_service.dart'; // ĐÃ THÊM
 
 class LevelScreen extends StatefulWidget {
   const LevelScreen({super.key});
@@ -36,7 +37,7 @@ class _LevelScreenState extends State<LevelScreen> {
 
   Future<void> _changeLanguage() async {
     final userId = FirebaseAuth.instance.currentUser!.uid;
-    final scaffoldMessenger = ScaffoldMessenger.of(context); // Lưu trước
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     String? selectedLanguage = await showDialog<String>(
       context: context,
@@ -64,7 +65,7 @@ class _LevelScreenState extends State<LevelScreen> {
         SnackBar(
           content: Text(
             "Language changed to $selectedLanguage",
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
           backgroundColor: LevelScreen.greenPrimary,
         ),
@@ -100,21 +101,21 @@ class _LevelScreenState extends State<LevelScreen> {
       print("Difference: $difference");
 
       if (difference == 0) {
-        // 👉 Hôm nay đã tính streak rồi => KHÔNG cập nhật gì nữa
+        // Đã tính streak hôm nay → không làm gì
         return;
       } else if (difference == 1) {
-        // Liên tục => tăng streak
-        return;
+        // Liên tục → tăng streak
+        currentStreak++;
       } else if (difference > 1) {
-        // Bỏ lỡ ngày => reset streak
+        // Bỏ lỡ → reset
         currentStreak = 1;
       }
     } else {
-      // Lần đầu => streak = 1
+      // Lần đầu
       currentStreak = 1;
     }
 
-    // 👉 Chỉ update Firestore khi có thay đổi thực sự
+    // Cập nhật Firestore
     await userRef.update({
       'streak': currentStreak,
       'lastActive': Timestamp.fromDate(today),
@@ -139,6 +140,7 @@ class _LevelScreenState extends State<LevelScreen> {
         child: SafeArea(
           child: Column(
             children: [
+              // Header: Logo + Settings
               Padding(
                 padding: const EdgeInsetsDirectional.symmetric(
                   horizontal: 20,
@@ -200,8 +202,9 @@ class _LevelScreenState extends State<LevelScreen> {
                   ],
                 ),
               ),
+
+              // User Card: Avatar + Streak
               StreamBuilder<DocumentSnapshot>(
-                //lắng nghe dòng dữ liệu của firebase từ động cập nhật ui không cần setstate
                 stream: FirebaseFirestore.instance
                     .collection("users")
                     .doc(userId)
@@ -245,8 +248,8 @@ class _LevelScreenState extends State<LevelScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "Hello,$name!",
-                                style: TextStyle(
+                                "Hello, $name!",
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black87,
@@ -305,14 +308,17 @@ class _LevelScreenState extends State<LevelScreen> {
                   );
                 },
               ),
+
+              // Level List
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: StreamBuilder<QuerySnapshot>(
                     stream: levelIsQuery.snapshots(),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData)
+                      if (!snapshot.hasData) {
                         return const Center(child: CircularProgressIndicator());
+                      }
                       final levels = snapshot.data!.docs;
 
                       return SingleChildScrollView(
@@ -324,7 +330,7 @@ class _LevelScreenState extends State<LevelScreen> {
                             final doc = entry.value;
 
                             final levelNumber = doc["levelNumber"] ?? index + 1;
-                            final title = doc["title"] ?? "Level";
+                            final title = doc["title"] ?? "Level $levelNumber";
                             final bool isUnlocked =
                                 doc["isUnlocked"] ?? (levelNumber == 1);
                             final bool isLeft = index % 2 == 0;
@@ -388,8 +394,8 @@ class _LevelScreenState extends State<LevelScreen> {
                                             ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withValues(
-                                                  alpha: 0.15,
+                                                color: Colors.black.withOpacity(
+                                                  0.15,
                                                 ),
                                                 blurRadius: 12,
                                                 offset: const Offset(0, 6),
@@ -453,11 +459,24 @@ class _LevelScreenState extends State<LevelScreen> {
           ),
         ),
       ),
+
+      // FAB: Đặt lịch thông báo
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          await NotificationService().scheduleDailyReminder(
+            context,
+          ); // Truyền context
+          // Không cần show SnackBar ở đây nữa (đã xử lý trong service)
+        },
+        backgroundColor: LevelScreen.greenPrimary,
+        child: const Icon(Icons.notifications, color: Colors.white),
+      ),
+      // Bottom Navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
         elevation: 12,
         currentIndex: _currentIndex,
-        selectedItemColor: Colors.grey,
+        selectedItemColor: LevelScreen.greenPrimary,
         unselectedItemColor: Colors.grey,
         onTap: (index) {
           setState(() {
@@ -477,26 +496,18 @@ class _LevelScreenState extends State<LevelScreen> {
         },
         items: [
           BottomNavigationBarItem(
-            icon: SizedBox(
-              width: 25,
-              height: 25,
-              child: Image.asset("assets/avatars/home.png"),
-            ),
+            icon: Image.asset("assets/avatars/home.png", width: 25, height: 25),
             label: "Home",
           ),
           BottomNavigationBarItem(
-            icon: SizedBox(
-              width: 25,
-              height: 25,
-              child: Image.asset("assets/avatars/rank.png"),
-            ),
+            icon: Image.asset("assets/avatars/rank.png", width: 25, height: 25),
             label: "Leaderboard",
           ),
           BottomNavigationBarItem(
-            icon: SizedBox(
+            icon: Image.asset(
+              "assets/avatars/avatar.png",
               width: 25,
               height: 25,
-              child: Image.asset("assets/avatars/avatar.png"),
             ),
             label: "Profile",
           ),

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:totoeng/screens/level_screen.dart';
+import 'package:totoeng/services/notification_service.dart';
 
 class CongratulationScreen extends StatefulWidget {
   final int levelNumber;
@@ -30,10 +31,12 @@ class _CongratulationScreenState extends State<CongratulationScreen> {
       final userDoc = FirebaseFirestore.instance.collection("users").doc(uid);
       final nextLevel = widget.levelNumber + 1;
 
+      // Mở khóa level tiếp theo
       await userDoc.collection("levels").doc("level_$nextLevel").set({
         "isUnlocked": true,
       }, SetOptions(merge: true));
 
+      // Lấy dữ liệu người dùng hiện tại
       final userSnapshot = await userDoc.get();
       final lastActive = userSnapshot["lastActive"] as Timestamp?;
       int streak = userSnapshot.data()?["streak"] ?? 0;
@@ -41,6 +44,7 @@ class _CongratulationScreenState extends State<CongratulationScreen> {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
 
+      // Xử lý streak
       if (widget.levelNumber == 1) {
         streak = 1;
       } else {
@@ -53,29 +57,33 @@ class _CongratulationScreenState extends State<CongratulationScreen> {
             streak++;
           } else if (difference > 1) {
             streak = 1;
-          } else {
-            streak = streak; // Giữ nguyên streak nếu cùng ngày
           }
+          // Nếu difference == 0 → cùng ngày → giữ nguyên streak
         } else {
-          streak = 1; // Nếu lastActive là null, reset streak
+          streak = 1;
         }
       }
 
+      // Cập nhật Firestore: XP, streak, lastActive
       await userDoc.set({
         "xp": FieldValue.increment(20),
         "streak": streak,
         "lastActive": FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
+      // ĐÃ SỬA: Truyền context vào
+      await NotificationService().scheduleDailyReminder(context);
+
+      // Cập nhật UI
       setState(() {
         _isLoading = false;
         _streak = streak;
       });
     } catch (e) {
-      print("Error in _completeLevel: $e"); // Log lỗi để debug
+      print("Error in _completeLevel: $e");
       setState(() {
-        _isLoading = false; // Đảm bảo giao diện không bị kẹt
-        _streak = 1; // Gán giá trị mặc định nếu lỗi
+        _isLoading = false;
+        _streak = 1;
       });
     }
   }
@@ -87,22 +95,27 @@ class _CongratulationScreenState extends State<CongratulationScreen> {
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
     );
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(gradient: backgroundGradient),
         child: SafeArea(
           child: Center(
             child: _isLoading
-                ? const CircularProgressIndicator()
+                ? const CircularProgressIndicator(color: greenPrimary)
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      // Animation chúc mừng
                       Lottie.asset(
                         "assets/animation/congratulation1.json",
                         width: 250,
                         height: 250,
+                        fit: BoxFit.contain,
                       ),
                       const SizedBox(height: 20),
+
+                      // Tiêu đề
                       const Text(
                         "Congratulations!",
                         style: TextStyle(
@@ -112,18 +125,21 @@ class _CongratulationScreenState extends State<CongratulationScreen> {
                         ),
                       ),
                       const SizedBox(height: 10),
+
                       const Text(
-                        "you have completed level!",
+                        "You have completed the level!",
                         style: TextStyle(fontSize: 18, color: Colors.black87),
                       ),
                       const SizedBox(height: 20),
+
+                      // Streak badge
                       Container(
                         padding: const EdgeInsets.symmetric(
                           vertical: 8,
                           horizontal: 16,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withValues(alpha: 0.1),
+                          color: Colors.orange.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(30),
                         ),
                         child: Row(
@@ -147,6 +163,8 @@ class _CongratulationScreenState extends State<CongratulationScreen> {
                         ),
                       ),
                       const SizedBox(height: 40),
+
+                      // Nút quay lại
                       SizedBox(
                         width: 210,
                         child: ElevatedButton(
@@ -167,6 +185,7 @@ class _CongratulationScreenState extends State<CongratulationScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
+                            elevation: 3,
                           ),
                           child: const Text(
                             "Back to levels",
