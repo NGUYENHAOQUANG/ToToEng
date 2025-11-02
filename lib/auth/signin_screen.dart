@@ -69,6 +69,8 @@ class _SignInScreenState extends State<SignInScreen> {
     });
 
     try {
+      final googleSignIn = GoogleSignIn();
+      await googleSignIn.signOut(); // <- Xóa phiên Google hiện tại
       // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
@@ -110,7 +112,7 @@ class _SignInScreenState extends State<SignInScreen> {
           "photoURL": userCredential.user!.photoURL,
           "xp": 0,
           "streak": 0,
-          "language": "German",
+          "language": "Vietnamese",
           "lastActive": FieldValue.serverTimestamp(),
         });
 

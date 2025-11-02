@@ -36,7 +36,7 @@ android {
 }
 
 dependencies {
-    // ✅ Cập nhật phiên bản desugar_jdk_libs lên 2.1.4 (hoặc mới hơn)
+    // Cập nhật phiên bản desugar_jdk_libs lên 2.1.4 (hoặc mới hơn)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 
     implementation("com.google.android.gms:play-services-auth:21.2.0")

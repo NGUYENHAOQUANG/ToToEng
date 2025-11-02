@@ -6,7 +6,7 @@ import 'package:totoeng/screens/leaderborad_screen.dart';
 import 'package:totoeng/screens/profile_screen.dart';
 import 'package:totoeng/screens/screen_one.dart';
 import '../auth/signin_screen.dart';
-import 'package:totoeng/services/notification_service.dart'; // ĐÃ THÊM
+import 'package:totoeng/services/notification_service.dart';
 
 class LevelScreen extends StatefulWidget {
   const LevelScreen({super.key});
@@ -73,10 +73,64 @@ class _LevelScreenState extends State<LevelScreen> {
     }
   }
 
+  // HÀM MỚI: Người dùng tự chọn giờ nhắc học
+  Future<void> _setPersonalReminderTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: LevelScreen.greenPrimary,
+              onPrimary: Colors.white,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: LevelScreen.greenPrimary,
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      final userId = FirebaseAuth.instance.currentUser!.uid;
+      final userRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId);
+
+      await userRef.set({
+        'personalReminderHour': picked.hour,
+        'personalReminderMinute': picked.minute,
+        'personalReminderEnabled': true,
+      }, SetOptions(merge: true));
+
+      await NotificationService().schedulePersonalReminder(context);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Nhắc nhở học đặt lúc ${picked.format(context)} hàng ngày!',
+            ),
+            backgroundColor: LevelScreen.greenPrimary,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _checkAndUpdateStreak();
+    // Cập nhật lại thông báo cá nhân khi mở app
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationService().schedulePersonalReminder(context);
+    });
   }
 
   Future<void> _checkAndUpdateStreak() async {
@@ -101,21 +155,16 @@ class _LevelScreenState extends State<LevelScreen> {
       print("Difference: $difference");
 
       if (difference == 0) {
-        // Đã tính streak hôm nay → không làm gì
         return;
       } else if (difference == 1) {
-        // Liên tục → tăng streak
-        currentStreak++;
+        return;
       } else if (difference > 1) {
-        // Bỏ lỡ → reset
         currentStreak = 1;
       }
     } else {
-      // Lần đầu
       currentStreak = 1;
     }
 
-    // Cập nhật Firestore
     await userRef.update({
       'streak': currentStreak,
       'lastActive': Timestamp.fromDate(today),
@@ -174,6 +223,8 @@ class _LevelScreenState extends State<LevelScreen> {
                               builder: (context) => const SignInScreen(),
                             ),
                           );
+                        } else if (value == "personal_reminder") {
+                          await _setPersonalReminderTime();
                         }
                       },
                       itemBuilder: (context) => [
@@ -185,6 +236,16 @@ class _LevelScreenState extends State<LevelScreen> {
                               color: LevelScreen.greenPrimary,
                             ),
                             title: Text("Change Language"),
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: "personal_reminder",
+                          child: ListTile(
+                            leading: Icon(
+                              Icons.access_time,
+                              color: LevelScreen.greenPrimary,
+                            ),
+                            title: Text("Set Daily Study Reminder"),
                           ),
                         ),
                         const PopupMenuItem(
@@ -257,7 +318,7 @@ class _LevelScreenState extends State<LevelScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                "Learning $language",
+                                "Learner from $language",
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey.shade700,
@@ -460,17 +521,14 @@ class _LevelScreenState extends State<LevelScreen> {
         ),
       ),
 
-      // FAB: Đặt lịch thông báo
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await NotificationService().scheduleDailyReminder(
-            context,
-          ); // Truyền context
-          // Không cần show SnackBar ở đây nữa (đã xử lý trong service)
-        },
-        backgroundColor: LevelScreen.greenPrimary,
-        child: const Icon(Icons.notifications, color: Colors.white),
-      ),
+      // FAB: Đặt lại thông báo streak
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () async {
+      //     await NotificationService().scheduleDailyReminder(context);
+      //   },
+      //   backgroundColor: LevelScreen.greenPrimary,
+      //   child: const Icon(Icons.notifications, color: Colors.white),
+      // ),
       // Bottom Navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,

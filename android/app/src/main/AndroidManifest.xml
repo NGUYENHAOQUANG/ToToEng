@@ -1,10 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.totoeng">
 
-    <!-- 🧱 Quyền cần thiết -->
+    <!-- Quyền cần thiết -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" /> 
 
     <application
@@ -33,7 +32,7 @@
             </intent-filter>
         </activity>
 
-        <!-- 🔔 Receiver cho thông báo -->
+        <!--Receiver cho thông báo -->
         <receiver
             android:exported="false"
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />

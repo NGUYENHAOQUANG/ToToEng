@@ -88,6 +88,8 @@ class _MyWidgetState extends State<SignUpScreen> {
     });
 
     try {
+      final googleSignIn = GoogleSignIn();
+      await googleSignIn.signOut(); // <- Xóa phiên Google hiện tại
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
       if (googleUser == null) {
@@ -122,7 +124,7 @@ class _MyWidgetState extends State<SignUpScreen> {
           "photoURL": userCredential.user!.photoURL,
           "xp": 0,
           "streak": 0,
-          "language": "German",
+          "language": "Vietnamese",
           "lastActive": FieldValue.serverTimestamp(),
         });
 
